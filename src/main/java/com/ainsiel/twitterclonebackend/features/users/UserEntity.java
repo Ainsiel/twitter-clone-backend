@@ -1,6 +1,7 @@
 package com.ainsiel.twitterclonebackend.features.users;
 
 
+import com.ainsiel.twitterclonebackend.features.profiles.ProfileEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,11 @@ public class UserEntity implements CustomUserDetails {
 
     @Enumerated(EnumType.STRING)
     Role role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private ProfileEntity profile;
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

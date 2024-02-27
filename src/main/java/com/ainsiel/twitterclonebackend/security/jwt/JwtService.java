@@ -39,7 +39,7 @@ public class JwtService {
     }
 
     private Key getKey() {
-        byte[] keyBytes=Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -48,12 +48,11 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, CustomUserDetails userDetails) {
-        final String username=getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername())&& !isTokenExpired(token));
+        final String username = getUsernameFromToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    private Claims getAllClaims(String token)
-    {
+    private Claims getAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getKey())
@@ -62,19 +61,28 @@ public class JwtService {
                 .getBody();
     }
 
-    public <T> T getClaim(String token, Function<Claims,T> claimsResolver)
-    {
+    public <T> T getClaim(String token, Function<Claims,T> claimsResolver) {
         final Claims claims=getAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Date getExpiration(String token)
-    {
+    private Date getExpiration(String token) {
         return getClaim(token, Claims::getExpiration);
     }
 
-    private boolean isTokenExpired(String token)
-    {
+    private boolean isTokenExpired(String token) {
         return getExpiration(token).before(new Date());
+    }
+
+    public String getUsernameFromRequestHeader(String authHeader){
+        String token = extractTokenFromHeader(authHeader);
+        return getUsernameFromToken(token);
+    }
+
+    private String extractTokenFromHeader(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
     }
 }
