@@ -33,7 +33,7 @@ public class ProfileService {
                 .build();
     }
 
-    private ProfileEntity getProfileByUsername(String username){
+    public ProfileEntity getProfileByUsername(String username){
 
         return profileRepository.findByUsername(username).orElse(null);
     }
