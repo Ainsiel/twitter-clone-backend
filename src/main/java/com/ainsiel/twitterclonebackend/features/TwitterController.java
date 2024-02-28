@@ -22,4 +22,12 @@ public class TwitterController {
         return "Hello world from secured endpoint: "
                 .concat(jwtService.getUsernameFromRequestHeader(authHeader));
     }
+
+    //Get For You tweets -> Random tweets
+    //Get Following tweets -> User following tweets in order
+    //getAllUsernameFollows
+    //getAllUsernameFollowers
+    //createFollow
+    //deleteFollow
+    //getAllFollowsTweetsByUsername
 }
