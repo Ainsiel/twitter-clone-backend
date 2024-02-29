@@ -23,6 +23,4 @@ public class TwitterController {
                 .concat(jwtService.getUsernameFromRequestHeader(authHeader));
     }
 
-    //Get For You tweets -> Random tweets TweetController
-    //Get Following tweets -> User following tweets in order TweetController
 }

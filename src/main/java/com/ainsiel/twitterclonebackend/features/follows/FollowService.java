@@ -1,9 +1,10 @@
 package com.ainsiel.twitterclonebackend.features.follows;
 
 
+import com.ainsiel.twitterclonebackend.features.profiles.IProfileRepository;
 import com.ainsiel.twitterclonebackend.features.profiles.ProfileEntity;
 import com.ainsiel.twitterclonebackend.features.profiles.ProfileResponse;
-import com.ainsiel.twitterclonebackend.features.profiles.ProfileService;
+import com.ainsiel.twitterclonebackend.features.tweets.ITweetRepository;
 import com.ainsiel.twitterclonebackend.features.tweets.TweetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,15 @@ public class FollowService {
     private final IFollowRepository followRepository;
 
     @Autowired
-    private final ProfileService profileService;
+    private final IProfileRepository profileRepository;
 
     @Autowired
-    private final TweetService tweetService;
+    private final ITweetRepository tweetRepository;
+
+    private ProfileEntity getProfileByUsername(String username){
+
+        return profileRepository.findByUsername(username).orElse(null);
+    }
 
     private List<FollowEntity> getFollowsByUsername(String username){
 
@@ -44,8 +50,8 @@ public class FollowService {
             String followerUsername,
             String followsUsername){
 
-        ProfileEntity follower = profileService.getProfileByUsername(followerUsername);
-        ProfileEntity follows = profileService.getProfileByUsername(followsUsername);
+        ProfileEntity follower = getProfileByUsername(followerUsername);
+        ProfileEntity follows = getProfileByUsername(followsUsername);
 
         if (follower != null && follows != null) {
             FollowId id = new FollowId(follower,follows);
@@ -53,18 +59,6 @@ public class FollowService {
         }
 
         return null;
-    }
-
-    @Transactional
-    private void deleteFollow(
-            String followerUsername,
-            String followsUsername) {
-
-        followRepository
-                .deleteByFollow_Follower_UsernameAndFollow_Follows_Username(
-                        followerUsername,
-                        followsUsername
-                );
     }
 
 
@@ -77,6 +71,7 @@ public class FollowService {
 
         return (int) followRepository.countByFollow_Follows_Username(username);
     }
+
 
     public Boolean isUsernameRequesterFollowingUsernameRequested(
             String usernameRequester,
@@ -95,24 +90,8 @@ public class FollowService {
         List<ProfileEntity> profiles = follows.stream().map( follow -> follow
                 .getFollow().getFollows()).toList();
 
-        return profiles.stream().map(profile -> ProfileResponse.builder()
-                .name(profile.getName())
-                .username(profile.getUsername())
-                .bio(profile.getBio())
-                .location(profile.getLocation())
-                .website(profile.getWebsite())
-                .professional(profile.getProfessional())
-                .birthdate(profile.getBirthdate())
-                .joinedAt(profile.getJoinedAt().toString())
-                .coverURL(profile.getCoverURL())
-                .avatarURL(profile.getAvatarURL())
-                .following(getUsernameFollowingCount(profile.getUsername()))
-                .followers(getUsernameFollowersCount(profile.getUsername()))
-                .totalTweets(tweetService.getUsernameTweetsCount(profile.getUsername()))
-                .isFollowing(isUsernameRequesterFollowingUsernameRequested(
-                        usernameFromRequestHeader,
-                        username))
-                .build()).toList();
+        return profiles.stream().map(profile ->
+                buildProfileResponse(profile, username, usernameFromRequestHeader)).toList();
     }
 
     public List<ProfileResponse> getFollowersByUsername(
@@ -123,57 +102,52 @@ public class FollowService {
         List<ProfileEntity> profiles = follows.stream().map( follow -> follow
                 .getFollow().getFollower()).toList();
 
-        return profiles.stream().map(profile -> ProfileResponse.builder()
-                .name(profile.getName())
-                .username(profile.getUsername())
-                .bio(profile.getBio())
-                .location(profile.getLocation())
-                .website(profile.getWebsite())
-                .professional(profile.getProfessional())
-                .birthdate(profile.getBirthdate())
-                .joinedAt(profile.getJoinedAt().toString())
-                .coverURL(profile.getCoverURL())
-                .avatarURL(profile.getAvatarURL())
-                .following(getUsernameFollowingCount(profile.getUsername()))
-                .followers(getUsernameFollowersCount(profile.getUsername()))
-                .totalTweets(tweetService.getUsernameTweetsCount(profile.getUsername()))
-                .isFollowing(isUsernameRequesterFollowingUsernameRequested(
-                        usernameFromRequestHeader,
-                        username))
-                .build()).toList();
+        return profiles.stream().map(profile ->
+                buildProfileResponse(profile, username, usernameFromRequestHeader)
+        ).toList();
     }
 
     public ProfileResponse followProfileByUsername(
             String username,
             String usernameFromRequestHeader) {
-        FollowEntity follow = createFollow(usernameFromRequestHeader,username);
-        ProfileEntity profile = follow.getFollow().getFollows();
 
-        return ProfileResponse.builder()
-                .name(profile.getName())
-                .username(profile.getUsername())
-                .bio(profile.getBio())
-                .location(profile.getLocation())
-                .website(profile.getWebsite())
-                .professional(profile.getProfessional())
-                .birthdate(profile.getBirthdate())
-                .joinedAt(profile.getJoinedAt().toString())
-                .coverURL(profile.getCoverURL())
-                .avatarURL(profile.getAvatarURL())
-                .following(getUsernameFollowingCount(profile.getUsername()))
-                .followers(getUsernameFollowersCount(profile.getUsername()))
-                .totalTweets(tweetService.getUsernameTweetsCount(profile.getUsername()))
-                .isFollowing(isUsernameRequesterFollowingUsernameRequested(
-                        usernameFromRequestHeader,
-                        username))
-                .build();
+        FollowEntity follow = createFollow(usernameFromRequestHeader,username);
+        if (follow != null){
+            ProfileEntity profile = follow.getFollow().getFollows();
+
+            return buildProfileResponse(profile, username, usernameFromRequestHeader);
+        }
+
+        return null;
     }
 
+    @Transactional
     public ProfileResponse unfollowProfileByUsername(
             String username,
             String usernameFromRequestHeader) {
-        deleteFollow(usernameFromRequestHeader,username);
-        ProfileEntity profile = profileService.getProfileByUsername(username);
+
+        followRepository
+                .deleteByFollow_Follower_UsernameAndFollow_Follows_Username(
+                        usernameFromRequestHeader,
+                        username
+                );
+        ProfileEntity profile = getProfileByUsername(username);
+
+        return buildProfileResponse(profile, username, usernameFromRequestHeader);
+    }
+
+    public List<ProfileEntity> getFollowsProfilesByUsername(String username){
+
+        List<FollowEntity> follows = getFollowsByUsername(username);
+
+        return follows.stream().map( follow -> follow
+                .getFollow().getFollows()).toList();
+
+    }
+    private ProfileResponse buildProfileResponse(
+            ProfileEntity profile,
+            String username,
+            String usernameFromRequestHeader){
 
         return ProfileResponse.builder()
                 .name(profile.getName())
@@ -188,7 +162,7 @@ public class FollowService {
                 .avatarURL(profile.getAvatarURL())
                 .following(getUsernameFollowingCount(profile.getUsername()))
                 .followers(getUsernameFollowersCount(profile.getUsername()))
-                .totalTweets(tweetService.getUsernameTweetsCount(profile.getUsername()))
+                .totalTweets( (int) tweetRepository.countByProfile_Username(profile.getUsername()) )
                 .isFollowing(isUsernameRequesterFollowingUsernameRequested(
                         usernameFromRequestHeader,
                         username))
