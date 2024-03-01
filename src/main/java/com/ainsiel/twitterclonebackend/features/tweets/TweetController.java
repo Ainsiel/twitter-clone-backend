@@ -36,7 +36,9 @@ public class TweetController {
             @RequestHeader("Authorization") String authHeader){
 
         return ResponseEntity.ok(
-                tweetService.getRandomTweetsOrderByTweetedAt(authHeader)
+                tweetService
+                        .getRandomTweetsOrderByTweetedAt(
+                                jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
 
@@ -45,7 +47,9 @@ public class TweetController {
             @RequestHeader("Authorization") String authHeader){
 
         return ResponseEntity.ok(
-                tweetService.getFollowingTweetsOrderByTweetedAt(authHeader)
+                tweetService
+                        .getFollowingTweetsOrderByTweetedAt(
+                                jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
 
@@ -57,7 +61,7 @@ public class TweetController {
         return ResponseEntity.ok(
                 tweetService.getTweetsByUsernameOrderByTweetedAt(
                         username,
-                        authHeader)
+                        jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
 
@@ -67,7 +71,10 @@ public class TweetController {
             @RequestHeader("Authorization") String authHeader){
 
         return ResponseEntity.ok(
-                tweetService.createTweet(tweet,authHeader)
+                tweetService
+                        .createTweet(
+                                tweet,
+                                jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
 }

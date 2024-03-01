@@ -6,6 +6,7 @@ import com.ainsiel.twitterclonebackend.features.profiles.IProfileRepository;
 import com.ainsiel.twitterclonebackend.features.profiles.ProfileEntity;
 import com.ainsiel.twitterclonebackend.features.replies.ReplyService;
 import com.ainsiel.twitterclonebackend.features.retweets.RetweetService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -203,10 +204,13 @@ public class TweetService {
 
     private TweetEntity createTweetEntity(TweetRequest tweet, String username) {
 
+        ProfileEntity profile = profileRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + username));
+
         TweetEntity t = TweetEntity.builder()
                 .content(tweet.getContent())
                 .tweetedAt(LocalDate.now())
-                .profile(profileRepository.findByUsername(username).orElse(null))
+                .profile(profile)
                 .build();
 
         return tweetRepository.save(t);

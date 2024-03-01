@@ -13,12 +13,12 @@ public class ReplyService {
 
 
     public TweetEntity getParentByTweetId(Integer id) {
-        //TODO
+
         return null;
     }
 
     public List<TweetEntity> getRepliesByTweetId(Integer id) {
-        //TODO
+
         return null;
     }
 
