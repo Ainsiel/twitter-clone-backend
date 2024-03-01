@@ -12,5 +12,9 @@ public interface IReplyRepository extends JpaRepository<ReplyEntity, ReplyId> {
 
     Optional<List<ReplyEntity>> findAllByReply_Reply_Profile_Username(String username);
 
-    Optional<List<ReplyEntity>> findAllByReply_Tweet_Id(Long id);
+    Optional<List<ReplyEntity>> findAllByReply_Tweet_Id(Integer id);
+
+    Optional<ReplyEntity> findByReply_Reply_Id(Integer id);
+
+    long countByReply_Tweet_Id(Integer id);
 }

@@ -1,5 +1,6 @@
 package com.ainsiel.twitterclonebackend.features.tweets;
 
+import com.ainsiel.twitterclonebackend.features.replies.ReplyRequest;
 import com.ainsiel.twitterclonebackend.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,30 @@ public class TweetController {
                         .createTweet(
                                 tweet,
                                 jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @PostMapping("/replies")
+    public ResponseEntity<TweetResponse> postReply(
+            @RequestBody ReplyRequest reply,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .createReply(
+                        reply,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @GetMapping("/replies/{username}")
+    public ResponseEntity<List<TweetResponse>> getProfileReplies(
+            @PathVariable String username,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .getAllProfileRepliesTweetsOrderByTweetedAt(
+                        username,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
 }

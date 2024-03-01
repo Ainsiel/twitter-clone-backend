@@ -4,6 +4,8 @@ import com.ainsiel.twitterclonebackend.features.follows.FollowService;
 import com.ainsiel.twitterclonebackend.features.likes.LikeService;
 import com.ainsiel.twitterclonebackend.features.profiles.IProfileRepository;
 import com.ainsiel.twitterclonebackend.features.profiles.ProfileEntity;
+import com.ainsiel.twitterclonebackend.features.replies.ReplyEntity;
+import com.ainsiel.twitterclonebackend.features.replies.ReplyRequest;
 import com.ainsiel.twitterclonebackend.features.replies.ReplyService;
 import com.ainsiel.twitterclonebackend.features.retweets.RetweetService;
 import jakarta.persistence.EntityNotFoundException;
@@ -53,7 +55,8 @@ public class TweetService {
         TweetEntity parentEntity = getParentTweetEntity(id);
         List<TweetEntity> repliesEntity = getRepliesTweetEntity(id);
 
-        TweetResponse parent = buildTweetResponse(parentEntity, authHeader);
+        TweetResponse parent = parentEntity != null ? buildTweetResponse(parentEntity, authHeader) : null;
+
         List<TweetResponse> replies = repliesEntity.stream().map(
                 reply -> buildTweetResponse(reply, authHeader)
         ).toList();
@@ -233,5 +236,47 @@ public class TweetService {
                 .map(this::getAllTweetsEntitiesByUsername)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
+    }
+
+    public TweetResponse createReply(
+            ReplyRequest reply,
+            String usernameFromRequestHeader) {
+
+        TweetEntity tweet = getTweetById(reply.getTweetIdRequested());
+        TweetEntity replyEntity = createTweetEntity(reply.getContent(), usernameFromRequestHeader);
+        ReplyEntity createdReply = replyService.saveReply(tweet,replyEntity);
+
+        return buildTweetResponse(
+                createdReply.getReply().getReply(), usernameFromRequestHeader);
+    }
+
+    private TweetEntity createTweetEntity(String content, String username) {
+
+        ProfileEntity profile = profileRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + username));
+
+        TweetEntity t = TweetEntity.builder()
+                .content(content)
+                .tweetedAt(LocalDate.now())
+                .profile(profile)
+                .build();
+
+        return tweetRepository.save(t);
+    }
+
+    public List<TweetResponse> getAllProfileRepliesTweetsOrderByTweetedAt(
+            String username,
+            String usernameFromRequestHeader) {
+
+        List<ReplyEntity> repliesEntities = replyService.getAllRepliesByUsername(username);
+        List<TweetEntity> tweetsEntities = repliesEntities.stream()
+                .map(reply -> reply.getReply().getReply()).toList();
+
+        List<TweetEntity> sortedTweets = tweetsEntities.stream()
+                .sorted(Comparator.comparing(TweetEntity::getTweetedAt).reversed())
+                .toList();
+
+        return sortedTweets.stream().map(tweet ->
+                buildTweetResponse(tweet, usernameFromRequestHeader)).toList();
     }
 }
