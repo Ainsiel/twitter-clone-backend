@@ -102,4 +102,76 @@ public class TweetController {
                         jwtService.getUsernameFromRequestHeader(authHeader))
         );
     }
+
+    @GetMapping("/retweets/{username}")
+    public ResponseEntity<List<TweetResponse>> getProfileRetweets(
+            @PathVariable String username,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .getAllProfileRetweetsTweetsOrderByTweetedAt(
+                        username,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @PostMapping("/retweets/{id}")
+    public ResponseEntity<TweetResponse> createRetweet(
+            @PathVariable Integer tweetId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .createRetweet(
+                        tweetId,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @DeleteMapping("/retweets/{id}")
+    public ResponseEntity<TweetResponse> deleteRetweet(
+            @PathVariable Integer tweetId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .deleteRetweet(
+                        tweetId,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @GetMapping("/likes/{username}")
+    public ResponseEntity<List<TweetResponse>> getProfileLikes(
+            @PathVariable String username,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .getAllProfileLikesTweetsOrderByTweetedAt(
+                        username,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @PostMapping("/likes/{id}")
+    public ResponseEntity<TweetResponse> createLike(
+            @PathVariable Integer tweetId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .createLike(
+                        tweetId,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
+
+    @DeleteMapping("/likes/{id}")
+    public ResponseEntity<TweetResponse> deleteLike(
+            @PathVariable Integer tweetId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(tweetService
+                .deleteLike(
+                        tweetId,
+                        jwtService.getUsernameFromRequestHeader(authHeader))
+        );
+    }
 }

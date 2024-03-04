@@ -12,7 +12,10 @@ public interface IRetweetRepository extends JpaRepository<RetweetEntity, Retweet
 
     Optional<List<RetweetEntity>> findAllByRetweet_Profile_Username(String username);
 
-    Optional<List<RetweetEntity>> findAllByRetweet_Tweet_Id(Integer tweetId);
+    long countByRetweet_Tweet_Id(Integer tweetId);
+
+    boolean existsByRetweet_Profile_UsernameAndRetweet_Tweet_Id(
+            String username, Integer tweetId);
 
     void deleteByRetweet_Profile_UsernameAndRetweet_Tweet_Id(String profileUsername, Integer tweetId);
 }

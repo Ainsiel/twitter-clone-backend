@@ -11,7 +11,10 @@ public interface ILikeRepository extends JpaRepository<LikeEntity, LikeId> {
 
     Optional<List<LikeEntity>> findAllByLike_Profile_Username(String username);
 
-    Optional<List<LikeEntity>>  findAllByLike_Tweet_Id(Integer tweetId);
+    long countByLike_Tweet_Id(Integer tweetId);
+
+    boolean existsByLike_Profile_UsernameAndLike_Tweet_Id(
+            String username, Integer tweetId);
 
     void deleteByLike_Profile_UsernameAndLike_Tweet_Id(String profileUsername, Integer tweetId);
 }

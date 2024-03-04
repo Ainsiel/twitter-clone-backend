@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "retweets")
+@Table(name = "likes")
 public class LikeEntity {
 
 

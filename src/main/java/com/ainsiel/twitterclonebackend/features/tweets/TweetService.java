@@ -1,14 +1,19 @@
 package com.ainsiel.twitterclonebackend.features.tweets;
 
 import com.ainsiel.twitterclonebackend.features.follows.FollowService;
+import com.ainsiel.twitterclonebackend.features.likes.ILikeRepository;
+import com.ainsiel.twitterclonebackend.features.likes.LikeEntity;
 import com.ainsiel.twitterclonebackend.features.likes.LikeService;
 import com.ainsiel.twitterclonebackend.features.profiles.IProfileRepository;
 import com.ainsiel.twitterclonebackend.features.profiles.ProfileEntity;
 import com.ainsiel.twitterclonebackend.features.replies.ReplyEntity;
 import com.ainsiel.twitterclonebackend.features.replies.ReplyRequest;
 import com.ainsiel.twitterclonebackend.features.replies.ReplyService;
+import com.ainsiel.twitterclonebackend.features.retweets.IRetweetRepository;
+import com.ainsiel.twitterclonebackend.features.retweets.RetweetEntity;
 import com.ainsiel.twitterclonebackend.features.retweets.RetweetService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +33,12 @@ public class TweetService {
 
     @Autowired
     private final IProfileRepository profileRepository;
+
+    @Autowired
+    private final IRetweetRepository retweetRepository;
+
+    @Autowired
+    private final ILikeRepository likeRepository;
 
     @Autowired
     private final FollowService followService;
@@ -278,5 +289,100 @@ public class TweetService {
 
         return sortedTweets.stream().map(tweet ->
                 buildTweetResponse(tweet, usernameFromRequestHeader)).toList();
+    }
+
+    public List<TweetResponse> getAllProfileRetweetsTweetsOrderByTweetedAt(
+            String username,
+            String usernameFromRequestHeader) {
+
+        List<RetweetEntity> retweetEntities = retweetService.getAllRetweetsByUsername(username);
+        List<TweetEntity> tweetsEntities = retweetEntities.stream()
+                .map(retweet -> retweet.getRetweet().getTweet()).toList();
+
+        List<TweetEntity> sortedTweets = tweetsEntities.stream()
+                .sorted(Comparator.comparing(TweetEntity::getTweetedAt).reversed())
+                .toList();
+
+        return sortedTweets.stream().map(tweet ->
+                buildTweetResponse(tweet, usernameFromRequestHeader)).toList();
+    }
+
+    public TweetResponse createRetweet(Integer tweetId, String usernameFromRequestHeader) {
+
+        ProfileEntity profile = profileRepository.findByUsername(usernameFromRequestHeader)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + usernameFromRequestHeader));
+        TweetEntity tweet = getTweetById(tweetId);
+
+        if (profile != null && tweet != null) {
+            RetweetEntity retweet = retweetService.createRetweet(profile, tweet);
+            return buildTweetResponse(retweet.getRetweet().getTweet(),usernameFromRequestHeader);
+        }
+
+        return null;
+    }
+
+    @Transactional
+    public TweetResponse deleteRetweet(Integer tweetId, String usernameFromRequestHeader) {
+
+        ProfileEntity profile = profileRepository.findByUsername(usernameFromRequestHeader)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + usernameFromRequestHeader));
+        TweetEntity tweet = getTweetById(tweetId);
+
+        if (profile != null && tweet != null) {
+            retweetRepository
+                    .deleteByRetweet_Profile_UsernameAndRetweet_Tweet_Id(
+                            profile.getUsername(),
+                            tweet.getId());
+            return buildTweetResponse(tweet,usernameFromRequestHeader);
+        }
+
+        return null;
+    }
+
+    public List<TweetResponse> getAllProfileLikesTweetsOrderByTweetedAt(
+            String username, String usernameFromRequestHeader) {
+
+        List<LikeEntity> likeEntities = likeService.getAllLikesByUsername(username);
+        List<TweetEntity> tweetsEntities = likeEntities.stream()
+                .map(retweet -> retweet.getLike().getTweet()).toList();
+
+        List<TweetEntity> sortedTweets = tweetsEntities.stream()
+                .sorted(Comparator.comparing(TweetEntity::getTweetedAt).reversed())
+                .toList();
+
+        return sortedTweets.stream().map(tweet ->
+                buildTweetResponse(tweet, usernameFromRequestHeader)).toList();
+    }
+
+    public TweetResponse createLike(Integer tweetId, String usernameFromRequestHeader) {
+
+        ProfileEntity profile = profileRepository.findByUsername(usernameFromRequestHeader)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + usernameFromRequestHeader));
+        TweetEntity tweet = getTweetById(tweetId);
+
+        if (profile != null && tweet != null) {
+            LikeEntity like = likeService.createLike(profile, tweet);
+            return buildTweetResponse(like.getLike().getTweet(),usernameFromRequestHeader);
+        }
+
+        return null;
+    }
+
+    @Transactional
+    public TweetResponse deleteLike(Integer tweetId, String usernameFromRequestHeader) {
+
+        ProfileEntity profile = profileRepository.findByUsername(usernameFromRequestHeader)
+                .orElseThrow(() -> new EntityNotFoundException("Profile with username not found : " + usernameFromRequestHeader));
+        TweetEntity tweet = getTweetById(tweetId);
+
+        if (profile != null && tweet != null) {
+            likeRepository
+                    .deleteByLike_Profile_UsernameAndLike_Tweet_Id(
+                            profile.getUsername(),
+                            tweet.getId());
+            return buildTweetResponse(tweet,usernameFromRequestHeader);
+        }
+
+        return null;
     }
 }
