@@ -317,7 +317,6 @@ public class TweetService {
             RetweetEntity retweet = retweetService.createRetweet(profile, tweet);
             return buildTweetResponse(retweet.getRetweet().getTweet(),usernameFromRequestHeader);
         }
-
         return null;
     }
 

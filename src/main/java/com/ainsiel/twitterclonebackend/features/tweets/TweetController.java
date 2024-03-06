@@ -115,7 +115,7 @@ public class TweetController {
         );
     }
 
-    @PostMapping("/retweets/{id}")
+    @PostMapping("/retweets/{tweetId}")
     public ResponseEntity<TweetResponse> createRetweet(
             @PathVariable Integer tweetId,
             @RequestHeader("Authorization") String authHeader) {
@@ -127,7 +127,7 @@ public class TweetController {
         );
     }
 
-    @DeleteMapping("/retweets/{id}")
+    @DeleteMapping("/retweets/{tweetId}")
     public ResponseEntity<TweetResponse> deleteRetweet(
             @PathVariable Integer tweetId,
             @RequestHeader("Authorization") String authHeader) {
@@ -151,7 +151,7 @@ public class TweetController {
         );
     }
 
-    @PostMapping("/likes/{id}")
+    @PostMapping("/likes/{tweetId}")
     public ResponseEntity<TweetResponse> createLike(
             @PathVariable Integer tweetId,
             @RequestHeader("Authorization") String authHeader) {
@@ -163,7 +163,7 @@ public class TweetController {
         );
     }
 
-    @DeleteMapping("/likes/{id}")
+    @DeleteMapping("/likes/{tweetId}")
     public ResponseEntity<TweetResponse> deleteLike(
             @PathVariable Integer tweetId,
             @RequestHeader("Authorization") String authHeader) {
